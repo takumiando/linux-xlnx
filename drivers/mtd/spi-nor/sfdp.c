@@ -932,16 +932,24 @@ static int spi_nor_parse_smpt(struct spi_nor *nor,
 	u32 addr;
 	int ret;
 
+	printk(KERN_DEBUG "SPI NOR %s: parsing SMPT\n", nor->dev->name);
+
 	/* Read the Sector Map Parameter Table. */
 	len = smpt_header->length * sizeof(*smpt);
 	smpt = kmalloc(len, GFP_KERNEL);
 	if (!smpt)
 		return -ENOMEM;
 
+	printk(KERN_DEBUG "SPI NOR %s: SMPT length %zu bytes\n",
+	       nor->dev->name, len);
+
 	addr = SFDP_PARAM_HEADER_PTP(smpt_header);
 	ret = spi_nor_read_sfdp(nor, addr, len, smpt);
 	if (ret)
 		goto out;
+
+	printk(KERN_DEBUG "SPI NOR %s: SMPT read complete\n",
+	       nor->dev->name);
 
 	/* Fix endianness of the SMPT DWORDs. */
 	le32_to_cpu_array(smpt, smpt_header->length);
@@ -952,9 +960,15 @@ static int spi_nor_parse_smpt(struct spi_nor *nor,
 		goto out;
 	}
 
+	printk(KERN_DEBUG "SPI NOR %s: SMPT map in use found\n",
+	       nor->dev->name);
+
 	ret = spi_nor_init_non_uniform_erase_map(nor, sector_map);
 	if (ret)
 		goto out;
+
+	printk(KERN_DEBUG "SPI NOR %s: SMPT non-uniform erase map initialized\n",
+	       nor->dev->name);
 
 	spi_nor_regions_sort_erase_types(&params->erase_map);
 	/* fall through */
